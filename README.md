@@ -5,7 +5,9 @@ An educational repository for teaching Machine Learning Operations (MLOps) and p
 ## 📚 Course Overview
 
 **Repository:** https://github.com/wodecki/ASI_2025
+
 **Python Version:** 3.10-3.11
+
 **Package Manager:** `uv` (mandatory)
 
 ### Primary Technologies
