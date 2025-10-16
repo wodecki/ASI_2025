@@ -142,11 +142,11 @@ This method integrates your VM directly into VS Code, allowing you to edit files
 
 ### Step 2: Generate SSH Key Pair
 
-Open your terminal and run:
+On Your local computer (e.g. MacBook) open your terminal and run:
 
 ```bash
 # Generate a new SSH key pair
-# Replace 'andrzej_wodecki' with your actual username
+# Identify your_username by SSH to Your GCP VM first and asking "who am i"
 ssh-keygen -t rsa -f ~/.ssh/asi-micro -C your_username
 ```
 
