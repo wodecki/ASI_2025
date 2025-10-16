@@ -24,11 +24,6 @@ An educational repository for teaching Machine Learning Operations (MLOps) and p
 
 ```
 ASI_2025/
-├── .claude/                          # Claude Code AI assistant configuration
-│   ├── agents/                       # Specialized AI agents
-│   │   ├── edu-code-modernizer.md
-│   │   └── notebook-to-script-converter.md
-│   └── CLAUDE.md                     # Project instructions for AI
 ├── slides/                           # Course presentation materials
 │   ├── 0. Introduction/
 │   ├── 1. Set-up/
