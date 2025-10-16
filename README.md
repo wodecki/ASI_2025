@@ -1,7 +1,5 @@
 # ASI_2025 - Machine Learning Operations Course
 
-**Akademickie Szkolenie Inżynierów (ASI) 2025**
-
 An educational repository for teaching Machine Learning Operations (MLOps) and production ML engineering practices. This course covers the complete ML lifecycle from data processing through deployment and monitoring, with heavy emphasis on containerization, orchestration, and modern ML tooling.
 
 ## 📚 Course Overview
