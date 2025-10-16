@@ -39,13 +39,13 @@ Munich;25.1
 ## Files in This Module
 
 ```
-1. Data/demo/
-├── BigData - pandas vs DuckDB.ipynb          # Interactive Jupyter notebook (original)
-├── BigData - pandas vs DuckDB - solved.ipynb # Solved version with outputs
-├── bigdata_pandas_vs_duckdb.py               # Python script (executable)
-├── small_dataset.csv                         # Small sample for testing
-├── README.md                                 # This file
-└── Practice. GStoBigQuerytoPandas.pdf        # Additional practice materials
+1. pandas_vs_duckdb/
+├── bigdata_pandas_vs_duckdb.py    # Main Python script for analysis
+├── pyproject.toml                 # uv dependency configuration
+├── uv.lock                        # Locked dependency versions
+├── medium_dataset.csv             # 100M records dataset (~1.3 GB)
+├── large_dataset.csv              # 1B records dataset (~13 GB)
+└── README.md                      # This file
 ```
 
 ## Requirements
@@ -71,8 +71,6 @@ uv sync
 # Or install specific packages
 uv add pandas duckdb pyarrow
 
-# Install development dependencies (Jupyter)
-uv sync --dev
 ```
 
 ### System Requirements
@@ -89,30 +87,7 @@ uv sync --dev
 
 ## Usage Instructions
 
-### Option 1: Jupyter Notebook (Interactive Learning)
-
-**Recommended for students and interactive exploration**
-
-1. Start Jupyter:
-   ```bash
-   jupyter notebook
-   ```
-
-2. Open `BigData - pandas vs DuckDB.ipynb`
-
-3. Run cells sequentially:
-   - **Download data** (cells 1-2)
-   - **Analyze 100M with pandas** (cells 4-7)
-   - **Analyze 100M with DuckDB** (cells 8-9)
-   - **Analyze 1B with DuckDB** (cells 12-13)
-
-4. **Monitor resources:**
-   - Click the resource monitor icon in Jupyter (top right)
-   - Watch memory and disk usage during execution
-
-### Option 2: Python Script (Production-Style Execution)
-
-**Recommended for benchmarking and automation**
+### Running the Analysis Script
 
 1. Install dependencies:
    ```bash
@@ -142,19 +117,6 @@ uv sync --dev
    - **macOS:** Activity Monitor
    - **Linux:** `htop`, `top`, or `glances`
    - **Windows:** Task Manager
-
-### Option 3: Small Dataset Testing
-
-For quick testing without downloading large files:
-
-```python
-import pandas as pd
-import duckdb
-
-# Use the provided small sample
-df = pd.read_csv("small_dataset.csv", sep=";")
-print(df.groupby("station_name")["measurement"].agg(["min", "mean", "max"]))
-```
 
 ## Expected Performance Results
 
@@ -347,7 +309,6 @@ Module 5: Advanced Applications (LLM Integration)
 - **DuckDB Documentation:** https://duckdb.org/docs/
 - **pandas Documentation:** https://pandas.pydata.org/docs/
 - **Performance Comparison Study:** https://h2oai.github.io/db-benchmark/
-- **Practice Materials:** See `Practice. GStoBigQuerytoPandas.pdf` in this directory
 
 ## Questions for Discussion
 
@@ -366,10 +327,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # 2. Install dependencies
 uv sync
 
-# 3. Run Jupyter notebook
-uv run jupyter notebook
-
-# 4. Or run Python script
+# 3. Run the analysis script
 uv run python bigdata_pandas_vs_duckdb.py
 ```
 
