@@ -143,7 +143,9 @@ System design patterns, microservices architecture, and production ML systems.
 ## 📧 Contact and Support
 
 **Course Instructor:** Andrzej Wodecki, wodecki@pjwstk.edu.pl
+
 **Repository Issues:** https://github.com/wodecki/ASI_2025/issues
+
 
 ## 📄 License
 
