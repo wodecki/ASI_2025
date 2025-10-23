@@ -126,7 +126,7 @@ BigQuery → bigquery-public-data → iowa_liquor_sales → sales
 
 **2. Open Export Menu**
 
-- Click the **⋮** (three dots) menu next to the `sales` table
+- Click the `sales` table
 - Select **Export** → **Export to Cloud Storage**
 
 **Alternative path:**
