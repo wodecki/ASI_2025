@@ -116,6 +116,7 @@ predictor.fit(
     train_data,
     presets=preset,
     time_limit=time_limit,
+    excluded_model_types=["RecursiveTabular", "DirectTabular"],
 )
 training_time = time.time() - start_time
 
@@ -168,6 +169,10 @@ logger.info(f"✓ Model metadata saved to {metadata_file}")
 # Plot predictions
 logger.info("Generating prediction plots...")
 import matplotlib.pyplot as plt
+
+# Create plots directory if it doesn't exist
+os.makedirs("plots", exist_ok=True)
+
 predictor.plot(
     test_data,
     predictions,
@@ -175,7 +180,13 @@ predictor.plot(
     max_history_length=200,
     max_num_item_ids=4
 )
-logger.info("✓ Plots generated")
+
+# Save the plot with timestamp
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+plot_filename = f"plots/predictions_{timestamp}.png"
+plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
+logger.info(f"✓ Plot saved to {plot_filename}")
+plt.close()
 
 logger.info("\n" + "="*60)
 logger.info("Training complete!")

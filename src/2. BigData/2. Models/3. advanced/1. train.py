@@ -118,6 +118,7 @@ predictor.fit(
     train_data,
     presets=preset,
     time_limit=time_limit,
+    excluded_model_types=["RecursiveTabular", "DirectTabular"],
 )
 training_time = time.time() - start_time
 

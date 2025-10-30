@@ -46,6 +46,7 @@ predictor.fit(
     train_data,
     presets="medium_quality",
     time_limit=60,
+    excluded_model_types=["RecursiveTabular", "DirectTabular"],
 )
 
 # Make predictions
@@ -54,5 +55,18 @@ predictions.head()
 
 # Plot the predictions
 import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+
+# Create plots directory if it doesn't exist
+os.makedirs("plots", exist_ok=True)
+
 # Plot 4 randomly chosen time series and the respective forecasts
 predictor.plot(test_data, predictions, quantile_levels=[0.1, 0.9], max_history_length=200, max_num_item_ids=4)
+
+# Save the plot with timestamp
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+plot_filename = f"plots/predictions_{timestamp}.png"
+plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
+print(f"✓ Plot saved to {plot_filename}")
+plt.close()
