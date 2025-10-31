@@ -4,3 +4,6 @@
 
 # AutoGluon model directories
 autogluon-iowa-daily/
+
+# Plot outputs
+plots/
