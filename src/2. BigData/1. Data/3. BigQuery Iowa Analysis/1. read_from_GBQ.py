@@ -4,7 +4,7 @@ import pandas as pd
 
 # Configuration - UPDATE WITH YOUR PROJECT ID
 PROJECT_ID = "asi2025"
-DATASET = "iowa_sales"
+DATASET = "iowa"
 TABLE = "training_data"
 
 # Initialize BigQuery client

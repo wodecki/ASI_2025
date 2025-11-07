@@ -1,0 +1,38 @@
+# Docker Compose for Iowa Sales Predictor
+# Educational Purpose: Multi-container orchestration
+
+services:
+  # Backend: FastAPI + AutoGluon
+  backend:
+    build: ./backend
+    container_name: iowa_backend
+    ports:
+      - "8003:8003"
+    environment:
+      - PORT=8003
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Frontend: Streamlit
+  frontend:
+    build: ./frontend
+    container_name: iowa_frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://backend:8003
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+# Educational Notes:
+# - 'depends_on' ensures backend starts before frontend
+# - 'condition: service_healthy' waits for backend health check
+# - Environment variable API_URL uses service name 'backend' (Docker DNS)
+# - 'restart: unless-stopped' auto-restarts on failure

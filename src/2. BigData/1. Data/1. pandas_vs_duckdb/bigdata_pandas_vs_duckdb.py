@@ -202,35 +202,35 @@ def analyze_1b_with_pandas():
     print("This may cause memory issues. Consider skipping this step.")
 
     # Uncomment to run (at your own risk):
-    # start_time = time.time()
-    #
-    # df = (
-    #     pd.read_csv(
-    #         "large_dataset.csv",
-    #         sep=";",
-    #         header=None,
-    #         names=["station_name", "measurement"],
-    #         engine="pyarrow"
-    #     )
-    #     .groupby("station_name")
-    #     .agg(["min", "mean", "max"])
-    # )
-    #
-    # df.columns = df.columns.get_level_values(level=1)
-    # df = df.reset_index()
-    # df.columns = ["station_name", "min_measurement", "mean_measurement", "max_measurement"]
-    # df = df.sort_values("station_name")
-    #
-    # end_time = time.time()
-    #
-    # print("{", end="")
-    # for row in df.itertuples(index=False):
-    #     print(
-    #         f"{row.station_name}={row.min_measurement:.1f}/{row.mean_measurement:.1f}/{row.max_measurement:.1f}",
-    #         end=", "
-    #     )
-    # print("\b\b} ")
-    # print(f"Data processed in {end_time - start_time:.2f} seconds.")
+    start_time = time.time()
+    
+    df = (
+        pd.read_csv(
+            "large_dataset.csv",
+            sep=";",
+            header=None,
+            names=["station_name", "measurement"],
+            engine="pyarrow"
+        )
+        .groupby("station_name")
+        .agg(["min", "mean", "max"])
+    )
+    
+    df.columns = df.columns.get_level_values(level=1)
+    df = df.reset_index()
+    df.columns = ["station_name", "min_measurement", "mean_measurement", "max_measurement"]
+    df = df.sort_values("station_name")
+    
+    end_time = time.time()
+    
+    print("{", end="")
+    for row in df.itertuples(index=False):
+        print(
+            f"{row.station_name}={row.min_measurement:.1f}/{row.mean_measurement:.1f}/{row.max_measurement:.1f}",
+            end=", "
+        )
+    print("\b\b} ")
+    print(f"Data processed in {end_time - start_time:.2f} seconds.")
 
 
 # =============================================================================
