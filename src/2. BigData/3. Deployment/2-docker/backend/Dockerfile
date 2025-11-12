@@ -1,39 +1,73 @@
-# Educational Dockerfile for FastAPI + AutoGluon backend
-# Demonstrates modern uv-based Python dependency management in Docker
+# ============================================================================
+# Multi-stage build for minimal AutoGluon inference image
+# Optimizations:
+#   - CPU-only PyTorch (saves ~500MB)
+#   - Multi-stage build (saves ~300MB)
+#   - Minimal runtime dependencies
+#   - Single-layer cleanup commands
+# Expected final size: ~1.0-1.5GB (down from ~2.5GB)
+# ============================================================================
 
-FROM python:3.11-slim
+# --- Stage 1: Builder ---
+FROM python:3.11-slim AS builder
 
-# Install uv - fast Python package manager
-# Educational Note: Using official uv image as source
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Set working directory
-WORKDIR /app
+WORKDIR /build
 
-# Copy dependency files first (for Docker layer caching)
-# Educational Note: Dependencies change less frequently than code,
-# so we copy them first to leverage Docker's layer cache
+# Copy pyproject.toml (without torch - we'll install CPU version separately)
 COPY pyproject.toml ./
 
-# Install dependencies
-# Educational Note: uv sync reads pyproject.toml and creates .venv
+# Install CPU-only PyTorch first (saves ~500MB by avoiding CUDA)
+RUN pip install --no-cache-dir --target=/install \
+    torch==2.2.0+cpu \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining dependencies via uv
 RUN uv sync --no-dev
 
-# Copy application code and model artifacts
-# Educational Note: Copied after dependencies for better cache utilization
+# --- Stage 2: Runtime (minimal) ---
+FROM python:3.11-slim
+
+# Install only essential runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /root/.cache
+
+# Copy uv binary for running commands
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# Copy installed packages from builder stage
+COPY --from=builder /install /usr/local/lib/python3.11/site-packages
+COPY --from=builder /build/.venv /app/.venv
+
+# Copy pyproject.toml for uv run to recognize dependencies
+COPY pyproject.toml ./
+
+# Copy application code and model
 COPY main.py ./
 COPY data/ ./data/
 COPY autogluon-iowa-daily/ ./autogluon-iowa-daily/
 
-# Expose port
-# Educational Note: Documents which port the container listens on
-EXPOSE 8003
-
-# Environment variables
-# Educational Note: PORT can be overridden at runtime (important for Cloud Run)
+# Set environment
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
 ENV PORT=8003
 
-# Run the application
-# Educational Note: Using exec form (JSON array) for proper signal handling
-# 'uv run' automatically activates the virtual environment
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"]
+EXPOSE 8003
+
+# Health check (curl now installed)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8003/ || exit 1
+
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"]

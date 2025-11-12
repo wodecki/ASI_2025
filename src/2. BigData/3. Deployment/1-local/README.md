@@ -1,416 +1,65 @@
-# Stage 1: Local Development 🖥️
+# Local Deployment
 
-## 🎯 Educational Purpose
+FastAPI backend and Streamlit frontend running locally for Iowa alcohol sales forecasting.
 
-This module introduces the fundamentals of **microservices architecture** in the ML context:
-
-- **Backend (FastAPI):** REST API serving ML model
-- **Frontend (Streamlit):** Interactive user interface
-- **Communication:** HTTP requests between components
-
-**Level:** Beginner
-**Time:** 1-2 hours
-**Requirements:** Python 3.11, uv package manager
-
-## 📐 Architecture
+## Architecture
 
 ```
-┌──────────────────────┐
-│   USER (Browser)     │
-│   localhost:8501     │
-└──────────┬───────────┘
-           │ Interacts with UI
-           ↓
-┌──────────────────────┐
-│  Streamlit Frontend  │  Port 8501
-│  (frontend/app.py)   │
-│                      │
-│  - Item selection    │
-│  - Predict button    │
-│  - Results display   │
-└──────────┬───────────┘
-           │ HTTP GET
-           │ requests.get("http://localhost:8003/predict/{item}")
-           ↓
-┌──────────────────────┐
-│  FastAPI Backend     │  Port 8003
-│  (backend/main.py)   │
-│                      │
-│  @startup:           │
-│  - Load model        │ ← AutoGluon TimeSeriesPredictor
-│  - Load data         │ ← iowa_sales.csv
-│                      │
-│  @request:           │
-│  - Generate forecast │
-│  - Return JSON       │
-└──────────────────────┘
+User Browser (localhost:8501)
+         ↓
+Streamlit Frontend
+         ↓ HTTP
+FastAPI Backend (localhost:8003)
+         ↓
+AutoGluon Model
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
-### Step 0: Prerequisites
-
-**Install uv (if not already installed):**
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-### Step 1: Train the Model (Backend - Terminal 1)
-
-**IMPORTANT:** This deployment is self-contained. You must train the model first.
+### 1. Train Model (Terminal 1)
 
 ```bash
 cd backend/
-uv sync                  # Install dependencies (first time only)
-uv run python "1. train.py"  # Train model (~60 seconds)
+uv sync
+uv run python "0. train.py"
 ```
 
-**Expected output:**
-```
-============================================================
-Iowa Sales Time Series Model Training
-============================================================
-Step 1: Loading data from data/iowa_sales.csv
-✓ Loaded 2034 rows
-✓ Products: 5
-...
-Training in progress... (this takes ~60 seconds)
-...
-Training Complete!
-✓ Model saved to: autogluon-iowa-daily/
-```
-
-**Note for Intel Mac users:** The project includes a fix for torch compatibility.
-
-### Step 2: Run Backend Server (Terminal 1)
+### 2. Start Backend (Terminal 1)
 
 ```bash
-# Still in backend/ directory
 uv run uvicorn main:app --reload --host 0.0.0.0 --port 8003
 ```
 
-**Expected output:**
-```
-INFO: Loading AutoGluon predictor...
-INFO: ✓ Predictor loaded successfully
-INFO: Loading and preprocessing training data...
-INFO: ✓ Data loaded: 2034 records, 5 unique items
-INFO: ============================================================
-INFO: Backend ready! API available at http://localhost:8003
-INFO: ============================================================
-INFO: Uvicorn running on http://0.0.0.0:8003
-```
+Backend will be available at: http://localhost:8003
 
-### Step 3: Test Backend (Terminal 2)
-
-```bash
-# Health check
-curl http://localhost:8003/
-
-# Get available items
-curl http://localhost:8003/items
-
-# Get prediction
-curl "http://localhost:8003/predict/BLACK%20VELVET"
-```
-
-### Step 4: Run Frontend (Terminal 2 or 3)
+### 3. Start Frontend (Terminal 2)
 
 ```bash
 cd frontend/
-uv sync                  # Install dependencies (first time only)
+uv sync
 uv run streamlit run app.py
 ```
 
-**Streamlit will open automatically in browser:** http://localhost:8501
+Frontend will be available at: http://localhost:8501
 
-### Step 5: Use the Application
+## Test
 
-1. Select product from dropdown (e.g., "BLACK VELVET")
-2. Click "🔮 Generate Forecast"
-3. View results:
-   - Table with 7-day forecasts
-   - Line chart
-   - Raw JSON response
-
-## 📂 Project Structure
-
-```
-1-local/
-├── README.md                        # This file
-│
-├── backend/                         # FastAPI REST API
-│   ├── 1. train.py                  # Model training script (run first!)
-│   ├── main.py                      # Application code
-│   ├── pyproject.toml               # Dependencies (uv format, includes torch fix)
-│   ├── README.md                    # Backend documentation
-│   ├── data/
-│   │   └── iowa_sales.csv           # Training data (2034 rows, 5 products)
-│   └── autogluon-iowa-daily/        # Generated by 1. train.py
-│
-└── frontend/                        # Streamlit UI
-    ├── app.py                       # Application code
-    ├── pyproject.toml               # Dependencies (uv format)
-    └── README.md                    # Frontend documentation
-```
-
-## 💡 Key Design Decisions
-
-### Self-Contained Deployment
-
-This deployment is **based on** the minimal training example (`2. BigData/2. Models/1. minimal`) but is **self-sustainable**:
-
-- ✅ Includes its own training script (`1. train.py`)
-- ✅ Uses the same data and model approach
-- ✅ No external dependencies on other directories
-- ✅ Can be distributed as a standalone project
-
-This design allows students to:
-1. Learn from the minimal example first
-2. See the same patterns applied in deployment context
-3. Work with deployment independently without cross-directory dependencies
-
-## 🔑 Key Concepts
-
-### 1. Microservices Architecture
-
-**Why separate backend and frontend?**
-
-✅ **Advantages:**
-- **Separation of concerns:** UI logic ≠ business logic
-- **Independent scaling:** Backend and frontend can scale separately
-- **Technology flexibility:** Different frameworks for different tasks
-- **Team collaboration:** Frontend and backend teams can work in parallel
-
-❌ **Disadvantages (local):**
-- Requires running 2 processes
-- Network latency (though minimal locally)
-
-### 2. RESTful API Design
-
-**Backend Endpoints:**
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/` | GET | Health check |
-| `/items` | GET | List available products |
-| `/predict/{item}` | GET | Generate 7-day forecast |
-
-**REST Principles:**
-- **Stateless:** Each request is independent
-- **Resource-based:** URLs represent resources (`/predict/BLACK_VELVET`)
-- **HTTP methods:** GET for retrieval
-- **JSON format:** Standard data exchange format
-
-### 3. Efficient Resource Management
-
-**Anti-Pattern (BAD):**
-```python
-@app.get("/predict/{item}")
-def predict(item: str):
-    predictor = load_model()        # ❌ Loads model on EVERY request (slow!)
-    data = load_data()              # ❌ Reloads data every time
-    return predictor.predict(data)
-```
-
-**Best Practice (GOOD):**
-```python
-# Load once at startup
-predictor = None
-
-@app.on_event("startup")
-async def startup():
-    global predictor
-    predictor = load_model()        # ✅ Load once (fast requests!)
-
-@app.get("/predict/{item}")
-def predict(item: str):
-    return predictor.predict(data)  # ✅ Use pre-loaded model
-```
-
-**Performance Impact:**
-- Bad: ~5 seconds per request
-- Good: ~200ms per request
-- **25x speedup!**
-
-### 4. Error Handling & User Experience
-
-**Backend:** HTTP status codes
-```python
-if item_name not in predictions:
-    raise HTTPException(status_code=404, detail="Item not found")
-```
-
-**Frontend:** User-friendly messages
-```python
-except requests.exceptions.ConnectionError:
-    st.error("Cannot connect to backend. Is it running?")
-```
-
-## 🎓 Learning Objectives
-
-After completing this module, you will be able to:
-
-### Basics
-- [ ] Run local backend and frontend
-- [ ] Understand HTTP communication between components
-- [ ] Test API via curl
-- [ ] Use Swagger UI (http://localhost:8003/docs)
-
-### Intermediate
-- [ ] Explain the difference between monolith and microservices
-- [ ] Implement RESTful endpoints
-- [ ] Optimize loading zasobów (startup vs per-request)
-- [ ] Handle errors i timeouts
-
-### Advanced
-- [ ] Understand async/await in FastAPI
-- [ ] Add new endpoints to API
-- [ ] Integrate new ML model
-- [ ] Extend frontend o nowe funkcje
-
-## 🧪 Exercises
-
-### Exercise 1: Add New Endpoint
-Dodaj endpoint `/health` zwracający status systemu:
-```json
-{
-  "status": "healthy",
-  "model_loaded": true,
-  "uptime_seconds": 123
-}
-```
-
-**Hints:**
-- Use `@app.get("/health")`
-- Track startup time with `time.time()`
-- Check if `predictor is not None`
-
-### Exercise 2: Add Statistics
-Rozszerz `/predict/{item}` o statystyki:
-```json
-{
-  "item": "BLACK VELVET",
-  "predictions": [...],
-  "statistics": {
-    "mean": 1245.67,
-    "min": 1200.00,
-    "max": 1300.00,
-    "std": 25.43
-  }
-}
-```
-
-**Hints:**
-- Use pandas `describe()` method
-- Add to backend response dict
-
-### Exercise 3: Add Caching
-Dodaj caching to frontendu aby nie odpytywać API wielokrotnie:
-```python
-@st.cache_data(ttl=3600)  # Cache for 1 hour
-def get_predictions(item_name: str):
-    ...
-```
-
-**Test:** Czy drugi request for tego samego produktu jest szybszy?
-
-## 🔍 Troubleshooting
-
-### Problem: "ModuleNotFoundError"
-**Solution:**
+**Backend API:**
 ```bash
-cd backend/  # or frontend/
-uv sync
+curl http://localhost:8003/
+curl http://localhost:8003/predict/BLACK%20VELVET
 ```
 
-### Problem: "Address already in use"
-**Solution:** Another process is using port 8003 or 8501
-```bash
-# Find process
-lsof -ti:8003    # for backendu
-lsof -ti:8501    # for frontendu
+**Frontend:**
+Open http://localhost:8501 in your browser and select a product.
 
-# Kill process
-lsof -ti:8003 | xargs kill -9
-```
+## Files
 
-### Problem: "Connection refused" in frontend
-**Solution:** Backend is not running
-```bash
-# W osobnym terminalu
-cd backend/
-uv run uvicorn main:app --host 0.0.0.0 --port 8003
-```
+- `backend/0. train.py` - Train the AutoGluon model
+- `backend/main.py` - FastAPI backend server
+- `frontend/app.py` - Streamlit frontend UI
 
-### Problem: Długi startup time
-**Oczekiwane:** Pierwsze uruchomienie backendu trwa 5-10 seconds (loading modelu)
+## Requirements
 
-**Check logi:**
-```
-INFO: Loading AutoGluon predictor...    ← Should appear
-INFO: Predictor loaded successfully      ← Should complete
-```
-
-## 📊 Performance Benchmarks
-
-**Typowe wartości (MacBook Pro M1):**
-
-| Metric | Value | Notes |
-|--------|-------|-------|
-| Backend startup | 5-8s | Model loading |
-| First request | 300-500ms | Cold start |
-| Subsequent requests | 150-250ms | Model in memory |
-| Frontend load | 1-2s | Streamlit initialization |
-| UI interaction | <100ms | Local network |
-
-## 🔗 Next Steps
-
-When you master local development:
-
-1. **[Stage 2: Docker](../2-docker/README.md)**
-   - Containerization
-   - Reproducible environments
-   - Docker Compose for multi-container apps
-
-2. **[Stage 3: Cloud](../3-cloud/README.md)**
-   - GCP Cloud Run deployment
-   - Serverless architecture
-   - Production-ready patterns
-
-## 💡 Additional Resources
-
-### Documentation
-- [FastAPI Tutorial](https://fastapi.tiangolo.com/tutorial/)
-- [Streamlit Quickstart](https://docs.streamlit.io/get-started)
-- [AutoGluon TimeSeries](https://auto.gluon.ai/stable/tutorials/timeseries/index.html)
-
-### Concepts
-- [Microservices Architecture](https://microservices.io/)
-- [RESTful API Design](https://restfulapi.net/)
-- [HTTP Status Codes](https://httpstatuses.com/)
-
-### Tools
-- [Postman](https://www.postman.com/) - API testing tool
-- [curl](https://curl.se/) - Command-line HTTP client
-- [uv](https://github.com/astral-sh/uv) - Fast Python package manager
-
-## 🎯 Summary
-
-**What we learned:**
-- ✅ Microservices architecture (backend + frontend)
-- ✅ RESTful API design with FastAPI
-- ✅ Interactive UI with Streamlit
-- ✅ HTTP communication between services
-- ✅ Performance optimization (startup loading)
-- ✅ Error handling and UX patterns
-- ✅ Modern Python tooling (uv)
-
-**What's next:**
-- 🐳 Docker containerization
-- ☁️ Cloud deployment
-- 📊 Load testing
-- 🔒 Authentication
-- 📈 Monitoring
-
-**Key Takeaway:** Local development is the foundation. Master it before moving to containers and cloud!
+- Python 3.10 or 3.11
+- `uv` package manager

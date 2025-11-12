@@ -1,293 +1,41 @@
-# Backend FastAPI - Local Development
+# Backend - FastAPI
 
-## 📚 Educational Purpose
+FastAPI backend serving AutoGluon time series predictions via REST API.
 
-This module demonstrates fundamental patterns for building REST APIs for ML models:
+## Setup
 
-1. **Model as a Service** - ML model accessible via HTTP API
-2. **Efficient Resource Loading** - Model and data loaded once at startup (not per request)
-3. **RESTful API Design** - Clean interface with proper HTTP codes
-4. **Observability** - Logging for debugging and monitoring
-
-## 🏗️ Architecture
-
-```
-Client (curl/Streamlit/browser)
-         ↓ HTTP GET
-┌────────────────────────┐
-│   FastAPI Backend      │
-│  (main.py)             │
-│                        │
-│  @startup:             │
-│  - Load model          │ ← Once at startup
-│  - Load & preprocess   │   (not per request!)
-│    data                │
-│                        │
-│  GET /predict/{item}:  │
-│  - Generate forecast   │
-│  - Return JSON         │
-└────────────────────────┘
-         ↓
-┌────────────────────────┐
-│  AutoGluon Predictor   │
-│  (loaded in memory)    │
-└────────────────────────┘
-```
-
-## 🔑 Key Code Patterns
-
-### 1. Startup Event - Lazy Loading
-```python
-@app.on_event("startup")
-async def startup_event():
-    # Load model once, not multiple times!
-    predictor = TimeSeriesPredictor.load("autogluon-iowa-daily")
-    train_data = preprocess_data()
-```
-
-**Why:** Avoids repeated loading (I/O expensive), reduces latency.
-
-### 2. RESTful Endpoint Design
-```python
-@app.get("/predict/{item_name}")
-async def predict(item_name: str):
-    # Path parameter = RESTful resource access
-```
-
-**Why:** URL represents resource, clear semantics, cache-friendly.
-
-### 3. Proper Error Handling
-```python
-if item_name not in predictions:
-    raise HTTPException(status_code=404, detail="Item not found")
-```
-
-**Why:** HTTP status codes communicate error type (404 = not found, 503 = service unavailable).
-
-### 4. Structured Logging
-```python
-logger.info(f"Generating predictions for: {item_name}")
-```
-
-**Why:** Helps with debugging, monitoring, and troubleshooting production systems.
-
-## ⚙️ Installation and Running
-
-### Prerequisites
-
-This backend is **self-contained** and includes its own training script. You don't need to train models elsewhere.
-
-**System Requirements:**
-- Python 3.11 or higher
-- 4GB RAM minimum (8GB recommended for training)
-- Intel or ARM Mac, Linux, or Windows
-
-### 1. Install Dependencies
 ```bash
-# Install uv if not already installed
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install project dependencies
+# Install dependencies
 uv sync
-```
 
-**Note for Intel Mac users:** This project includes a fix for torch compatibility (`torch<2.7.0`).
-
-### 2. Train the Model
-
-**IMPORTANT: You must train the model before running the server.**
-
-```bash
-# Train AutoGluon model (takes ~60 seconds)
+# Train the model (creates autogluon-iowa-daily/ directory)
 uv run python "0. train.py"
 ```
 
-This creates the `autogluon-iowa-daily/` directory with trained model artifacts.
+## Run
 
-**What happens during training:**
-- Loads Iowa sales data from `data/iowa_sales.csv`
-- Trains 7+ time series models automatically
-- Creates ensemble model for best performance
-- Saves model to `autogluon-iowa-daily/`
-
-### 3. Run Server
 ```bash
-# Development mode with auto-reload
-uv run uvicorn main:app --reload --host 0.0.0.0 --port 8003
+# Start the server
+uv run uvicorn main:app --host 0.0.0.0 --port 8003
 
-# Production mode
-uv run uvicorn main:app --host 0.0.0.0 --port 8003 --workers 4
+# Or run directly
+uv run python main.py
 ```
 
-The server will validate that the model exists on startup. If not found, you'll see a clear error message.
+Server will be available at: http://localhost:8003
 
-### 4. Test API
+## API Endpoints
 
-**Health check:**
+- `GET /` - Health check
+- `GET /items` - List available products
+- `GET /predict/{item_name}` - Get 7-day forecast for a product
+
+## Test
+
 ```bash
+# Health check
 curl http://localhost:8003/
+
+# Get predictions
+curl http://localhost:8003/predict/BLACK%20VELVET
 ```
-
-**List available products:**
-```bash
-curl http://localhost:8003/items
-```
-
-**Prediction for product:**
-```bash
-curl "http://localhost:8003/predict/BLACK%20VELVET"
-```
-
-**In browser:**
-- API Documentation: http://localhost:8003/docs (automatic Swagger UI)
-- Alternative docs: http://localhost:8003/redoc
-
-## 📊 Sample API Response
-
-```json
-{
-  "item": "BLACK VELVET",
-  "predictions": [
-    {
-      "timestamp": "2024-01-01 00:00:00",
-      "date": "2024-01-01",
-      "mean": 1234.56
-    },
-    {
-      "timestamp": "2024-01-02 00:00:00",
-      "date": "2024-01-02",
-      "mean": 1256.78
-    }
-    // ... 5 more days (7-day forecast)
-  ],
-  "forecast_horizon": 7
-}
-```
-
-## 🛠️ File Structure
-
-```
-backend/
-├── 1. train.py                  # Model training script (run first!)
-├── main.py                      # FastAPI application
-├── pyproject.toml               # Dependencies (uv format)
-├── README.md                    # This file
-├── data/
-│   └── iowa_sales.csv          # Training data (2034 rows, 5 products)
-└── autogluon-iowa-daily/        # Generated by 1. train.py
-    ├── predictor.pkl            # Main predictor
-    ├── models/                  # Ensemble models
-    └── utils/                   # Preprocessed data
-```
-
-## 🎓 What You Will Learn
-
-### Basics
-1. How to build REST API with FastAPI
-2. How to serve ML model via HTTP
-3. How to use async/await in Python
-4. How to test APIs (curl, Swagger UI)
-
-### Intermediate
-1. Performance optimization (startup loading)
-2. RESTful design patterns
-3. HTTP status codes and error handling
-4. Structured logging
-
-### Advanced
-1. Difference between development and production mode
-2. Multi-worker deployment
-3. API versioning strategies
-4. Monitoring and observability
-
-## 🔍 Troubleshooting
-
-### Problem: `ERROR: Model not found!`
-**Cause:** You haven't trained the model yet.
-
-**Solution:**
-```bash
-# Train the model first
-uv run python "1. train.py"
-
-# Then start the server
-uv run uvicorn main:app --reload
-```
-
-### Problem: `ModuleNotFoundError: No module named 'autogluon'`
-**Solution:**
-```bash
-uv sync  # Installs all dependencies
-```
-
-### Problem: Torch installation fails on Intel Mac
-**Error:** `Distribution torch==2.7.1 ... doesn't have wheels for macosx_x86_64`
-
-**Solution:** Already fixed in `pyproject.toml` with `torch<2.7.0`. If you still see this:
-```bash
-# Remove old lock file and reinstall
-rm uv.lock
-uv sync
-```
-
-### Problem: `FileNotFoundError: data/iowa_sales.csv`
-**Solution:** Make sure you're running from the `backend/` directory:
-```bash
-cd backend/
-uv run uvicorn main:app --reload
-```
-
-### Problem: Port 8003 already in use
-**Solution:** Use a different port or kill the process:
-```bash
-# Use a different port
-uv run uvicorn main:app --port 8004
-
-# Or find and kill the process
-lsof -ti:8003 | xargs kill -9
-```
-
-### Problem: Training fails with memory error
-**Solution:** Training requires ~4GB RAM. Close other applications or use a smaller `time_limit`:
-```python
-# Edit 1. train.py, line 44
-predictor.fit(
-    train_data,
-    presets="fast_training",  # Changed from "medium_quality"
-    time_limit=30,  # Reduced from 60
-)
-```
-
-### Problem: Long startup time
-**Expected behavior:** First startup may take 5-10 seconds (model loading).
-Check logs:
-```
-INFO: Loading AutoGluon predictor...
-INFO: ✓ Predictor loaded successfully
-INFO: Loading and preprocessing training data...
-INFO: ✓ Data loaded: 2034 records, 5 unique items
-INFO: Backend ready! API available at http://localhost:8003
-```
-
-## 📈 Performance Tips
-
-1. **Model loading:** ~3-5 seconds at startup (acceptable)
-2. **Prediction latency:** ~200-500ms per request (with preprocessing)
-3. **Optimization opportunities:**
-   - Cache predictions if data doesn't change
-   - Use Redis for result caching
-   - Deploy with multiple workers for higher throughput
-
-## 🔗 Next Steps
-
-After mastering local deployment:
-1. **Module 2 (Docker):** Containerize this backend → reproducible environment
-2. **Module 3 (Cloud):** Deploy to GCP Cloud Run → serverless scaling
-3. **Module 4 (Performance):** Load testing with Locust → understand limits
-
-## 💡 Additional Resources
-
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [AutoGluon TimeSeries](https://auto.gluon.ai/stable/tutorials/timeseries/index.html)
-- [RESTful API Design Best Practices](https://restfulapi.net/)
-- [HTTP Status Codes](https://httpstatuses.com/)

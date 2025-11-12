@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.121.0",
     "pandas>=2.3.3",
     "uvicorn>=0.38.0",
-    "torch>=2.2.0,<2.3.0",  # Fix for Intel Mac compatibility (torch 2.3+ removed x86_64 macOS support)
+    # NOTE: torch is installed separately in Dockerfile (CPU-only version for smaller image)
+    # For local development, install with: uv add "torch>=2.2.0,<2.3.0"
     "numpy>=1.24.0,<2.0.0",  # AutoGluon 1.4.0 requires NumPy 1.x (not compatible with 2.x yet)
 ]

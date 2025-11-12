@@ -49,3 +49,14 @@ htmlcov/
 
 # Documentation (if large)
 *.md
+
+# Model artifacts from training (plots, etc.)
+plots/
+*.png
+*.jpg
+*.jpeg
+*.svg
+
+# Training/evaluation outputs
+evaluation_report.json
+data_quality_report.json
