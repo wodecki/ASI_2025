@@ -16,7 +16,7 @@ uv sync
 uv run streamlit run app.py
 
 # Or with custom API URL
-API_URL=https://iowa-backend-850710718243.europe-west4.run.app/ uv run streamlit run app.py
+API_URL=https://iowa-backend-3-850710718243.europe-west4.run.app/ uv run streamlit run app.py
 ```
 
 Frontend will be available at: http://localhost:8501
