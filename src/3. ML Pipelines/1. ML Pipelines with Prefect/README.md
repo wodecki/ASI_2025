@@ -484,14 +484,6 @@ dependencies = [
 ]
 ```
 
-## Next Steps
-
-After completing this module:
-
-1. **Module 6: Containerization** - Containerize your Prefect pipelines with Docker
-2. **Module 8: Experiment Tracking** - Integrate WandB with Prefect flows
-3. **Prefect Cloud** - Deploy flows to Prefect's managed platform
-
 ## Resources
 
 - [Prefect Documentation](https://docs.prefect.io/)
